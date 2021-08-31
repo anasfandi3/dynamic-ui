@@ -32,9 +32,9 @@ export default {
 #nav a.router-link-exact-active {
   color: #42b983;
 }
-</style>
-<script>
-function test() {
-  console.log("hsjkdfh");
+
+:root {
+  --nav-height: 72px;
+  --nav-width: 72px;
 }
-</script>
+</style>

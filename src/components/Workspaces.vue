@@ -1,11 +1,7 @@
 <template>
-  <div
-    class="ws-panel ws-panel-bottom ws-panel-left ws-panel-x"
-    @mouseenter="mouseEnter()"
-    @mouseleave="mouseLeave()"
-  >
-    <b-row class="w-100 mx-1 d-flex">
-      <div class="d-flex text-start mb-3 mt-2">
+  <div class="ws-panel ws-panel-bottom ws-panel-x">
+    <div class="w-100 row mx-1 d-flex">
+      <div class="ws-top-bar">
         <a draggable="true" @dragend="dock($event)" class="dark"
           ><i class="fas fa-th fa-lg"></i
         ></a>
@@ -13,55 +9,59 @@
           >Workspaces&nbsp;&nbsp;&nbsp;&nbsp;{{ workspaces.length }}</b
         >
         <div class="text-end w-100">
-          <a
-            :style="locked === true ? 'color:red' : 'color: blue'"
-            @click="locked = !locked"
-            href="#"
-            ><i class="fas fa-lock fa-lg"></i
+          <a @click="lock()" href="#"
+            ><i class="lock-icon fas fa-unlock fa-lg"></i
           ></a>
         </div>
       </div>
-      <div class="cards-container">
+      <div class="cards-container d-flex justify-content-between">
         <div class="plus-container">
-          <b-card bg-variant="light" class="plus-card">
-            <i class="fas fa-plus"></i>
-          </b-card>
+          <div bg-variant="light" class="card plus-card bg-light">
+            <div class="card-body">
+              <i class="fas fa-plus"></i>
+            </div>
+          </div>
         </div>
         <div class="scroll-button">
-          <b-button @click="scroll('l')" class="focus-none h-100" variant="none"
-            ><i class="fas fa-chevron-left fa-2x"></i
-          ></b-button>
+          <button @click="scroll('l')" class="focus-none btn-none btn h-100">
+            <i class="fas fa-chevron-left fa-2x"></i>
+          </button>
         </div>
         <div class="scrolling-wrapper">
-          <b-card
-            bg-variant="dark"
-            text-variant="white"
-            no-body
-            class="mx-3 workspace-card scrolling-card"
+          <div
+            class="card mx-3 workspace-card scrolling-card bg-dark text-white"
             v-for="(item, index) in workspaces"
             :key="index"
           >
-            <b-card-img
+            <img
               :src="item.img_url"
               alt="Image"
-              class="rounded-0 h-0"
-            ></b-card-img>
-            <b-card-text class="m-bot-1"> {{ item.name }} </b-card-text>
-          </b-card>
+              class="rounded-0 card-img h-0"
+            />
+            <p class="card-text m-bot-1">{{ item.name }}</p>
+          </div>
         </div>
         <div class="scroll-button">
-          <b-button @click="scroll('r')" class="focus-none h-100" variant="none"
-            ><i class="fas fa-chevron-right fa-2x"></i
-          ></b-button>
+          <button @click="scroll('r')" class="focus-none btn btn-none h-100">
+            <i class="fas fa-chevron-right fa-2x"></i>
+          </button>
         </div>
       </div>
-    </b-row>
+      <div
+        @mouseenter="mouseEnter()"
+        @mouseleave="mouseLeave()"
+        class="hover-bar hover-bar-bottom hover-bar-x"
+      >
+        <div></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import JQuery from "jquery";
-let $ = JQuery;
+// eslint-disable-next-line no-unused-vars
+
+let $ = require("jquery");
 export default {
   name: "Workspaces",
   data() {
@@ -126,24 +126,42 @@ export default {
       }
     },
     scroll(dir) {
-      if (dir === "l") {
-        $(".scrolling-wrapper").animate(
-          {
-            scrollLeft: "-=" + 250 + "px",
-          },
-          500
-        );
-      } else if (dir === "r") {
-        $(".scrolling-wrapper").animate(
-          {
-            scrollLeft: "+=" + 250 + "px",
-          },
-          500
-        );
+      if ($(".ws-panel-x")[0]) {
+        if (dir === "l") {
+          $(".scrolling-wrapper").animate(
+            {
+              scrollLeft: "-=" + 250 + "px",
+            },
+            500
+          );
+        } else if (dir === "r") {
+          $(".scrolling-wrapper").animate(
+            {
+              scrollLeft: "+=" + 250 + "px",
+            },
+            500
+          );
+        }
+      } else if ($(".ws-panel-y")) {
+        if (dir === "l") {
+          $(".scrolling-wrapper").animate(
+            {
+              scrollTop: "-=" + 180 + "px",
+            },
+            500
+          );
+        } else if (dir === "r") {
+          $(".scrolling-wrapper").animate(
+            {
+              scrollTop: "+=" + 180 + "px",
+            },
+            500
+          );
+        }
       }
     },
-    enterAction() {
-      if (!this.locked) {
+    enterAction(lockAction = false) {
+      if (!this.locked || lockAction) {
         let duration = 100;
         $(".workspace-card").animate(
           {
@@ -165,15 +183,9 @@ export default {
           duration
         );
       }
-      if ($(".ws-panel")[0].classList.contains("ws-panel-y")) {
-        $(".scrolling-wrapper")[0].style.setProperty(
-          "max-height",
-          screen.height * 0.55 + "px"
-        );
-      }
     },
-    leaveAction() {
-      if (!this.locked) {
+    leaveAction(unlockAction = false) {
+      if (!this.locked || unlockAction) {
         let duration = 100;
         $(".workspace-card").animate(
           {
@@ -209,27 +221,159 @@ export default {
       }, 100);
     },
     dock($event) {
-      window.test();
-      // let screen_width = screen.width;
-      let screen_height = screen.height;
-      // let sX = event.screenX;
+      //screen width and height
+      let browser_width = window.innerWidth;
+      let browser_height = window.innerHeight;
+
+      //mouse coords
+      let sX = event.screenX;
       let sY = $event.screenY;
-      console.log(sY);
-      let el = $(".ws-panel")[0];
+
+      //elements to dock
       let nav = $(".nav-menu")[0];
-      console.log(nav.offsetHeight);
-      if (sY < screen_height * 0.35) {
-        el.classList.remove("ws-panel-bottom");
-        el.style.removeProperty("bottom");
-        el.classList.add("ws-panel-top");
-        if (nav.classList.contains("nav-menu-top"))
-          el.style.setProperty("top", nav.offsetHeight + "px");
-      } else if (sY > screen_height * 0.65) {
-        el.classList.remove("ws-panel-top");
-        el.style.removeProperty("top");
-        el.classList.add("ws-panel-bottom");
-        if (nav.classList.contains("nav-menu-bottom"))
-          el.style.setProperty("bottom", nav.offsetHeight + "px");
+      let workspace = $(".ws-panel")[0];
+
+      let dFromRight = browser_width - sX;
+      let dFromLeft = sX;
+      let dFromBottom = browser_height - sY;
+      let dFromTop = sY;
+
+      if (
+        dFromRight < dFromLeft &&
+        dFromRight < dFromTop &&
+        dFromRight < dFromBottom
+      ) {
+        workspace.className = "ws-panel ws-panel-right ws-panel-top ws-panel-y";
+      } else if (
+        dFromLeft < dFromRight &&
+        dFromLeft < dFromTop &&
+        dFromLeft < dFromBottom
+      ) {
+        workspace.className = "ws-panel ws-panel-left ws-panel-top ws-panel-y";
+      } else if (
+        dFromTop < dFromRight &&
+        dFromTop < dFromLeft &&
+        dFromTop < dFromBottom
+      ) {
+        workspace.className = "ws-panel ws-panel-top ws-panel-x";
+      } else if (
+        dFromBottom < dFromRight &&
+        dFromBottom < dFromLeft &&
+        dFromBottom < dFromTop
+      ) {
+        workspace.className = "ws-panel ws-panel-bottom ws-panel-x";
+      }
+      this.checkPositions(nav, workspace);
+      if ($(".ws-panel")[0].classList.contains("ws-panel-y")) {
+        $(".scrolling-wrapper")[0].style.setProperty(
+          "max-height",
+          window.innerHeight * 0.5 + "px"
+        );
+      }
+    },
+    checkPositions(nav, workspace) {
+      // eslint-disable-next-line no-undef
+      let dDown = $(".drop-direction");
+      workspace.classList.remove(
+        "ws-panel-right-menu",
+        "ws-panel-left-menu",
+        "ws-panel-top-menu",
+        "ws-panel-bottom-menu"
+      );
+      for (let i = 0; i < dDown.length; i++) {
+        dDown[i].classList.remove("dropup", "dropdown", "dropstart", "dropend");
+      }
+
+      let { navPosition: navPosition, wsPosition: wsPosition } =
+        this.getPositions(nav, workspace);
+
+      if (navPosition === "top") {
+        for (let i = 0; i < dDown.length; i++) {
+          dDown[i].classList.add("dropdown");
+        }
+        if (wsPosition !== "bottom") {
+          workspace.classList.add("ws-panel-top-menu");
+        }
+      } else if (navPosition === "bottom") {
+        for (let i = 0; i < dDown.length; i++) {
+          dDown[i].classList.add("dropup");
+        }
+        if (wsPosition !== "top") {
+          workspace.classList.remove("ws-panel-top", "ws-panel-top-menu");
+          workspace.classList.add("ws-panel-bottom-menu", "ws-panel-bottom");
+        }
+      } else if (navPosition === "right") {
+        for (let i = 0; i < dDown.length; i++) {
+          dDown[i].classList.add("dropstart");
+        }
+        if (wsPosition !== "left") {
+          workspace.classList.add("ws-panel-right-menu");
+        }
+      } else if (navPosition === "left") {
+        for (let i = 0; i < dDown.length; i++) {
+          dDown[i].classList.add("dropend");
+        }
+        if (wsPosition !== "right") {
+          workspace.classList.add("ws-panel-left-menu");
+        }
+      }
+      let hoverBar = $(".hover-bar")[0];
+      if (wsPosition === "top") {
+        hoverBar.className = "hover-bar hover-bar-top hover-bar-x";
+      } else if (wsPosition === "bottom") {
+        hoverBar.className = "hover-bar hover-bar-bottom hover-bar-x";
+      } else if (wsPosition === "right") {
+        hoverBar.className = "hover-bar hover-bar-right hover-bar-y";
+      } else if (wsPosition === "left") {
+        hoverBar.className = "hover-bar hover-bar-left hover-bar-y";
+      }
+    },
+    getPositions(nav, workspace) {
+      let navPosition, wsPosition;
+      if (
+        nav.classList.contains("nav-menu-top") &&
+        nav.classList.contains("nav-menu-x")
+      ) {
+        navPosition = "top";
+      } else if (
+        nav.classList.contains("nav-menu-bottom") &&
+        nav.classList.contains("nav-menu-x")
+      ) {
+        navPosition = "bottom";
+      } else if (nav.classList.contains("nav-menu-right")) {
+        navPosition = "right";
+      } else {
+        navPosition = "left";
+      }
+
+      if (
+        workspace.classList.contains("ws-panel-top") &&
+        workspace.classList.contains("ws-panel-x")
+      ) {
+        wsPosition = "top";
+      } else if (
+        workspace.classList.contains("ws-panel-bottom") &&
+        workspace.classList.contains("ws-panel-x")
+      ) {
+        wsPosition = "bottom";
+      } else if (workspace.classList.contains("ws-panel-right")) {
+        wsPosition = "right";
+      } else {
+        wsPosition = "left";
+      }
+      return { navPosition, wsPosition };
+    },
+    lock() {
+      this.locked = !this.locked;
+      let icon = $(".lock-icon")[0];
+      if (this.locked === true) {
+        icon.classList.remove("fa-unlock");
+        icon.classList.add("fa-lock");
+        this.enterAction(true);
+      } else {
+        icon.classList.remove("fa-lock");
+        icon.classList.add("fa-unlock");
+        this.leaveAction(true);
       }
     },
   },
@@ -241,24 +385,38 @@ export default {
 .ws-panel-bottom {
   bottom: 0px;
 }
+.ws-panel-bottom-menu {
+  bottom: var(--nav-height) !important;
+}
 .ws-panel-top {
   top: 0px;
+}
+.ws-panel-top-menu {
+  top: var(--nav-height) !important;
 }
 .ws-panel-right {
   right: 0px;
 }
+.ws-panel-right-menu {
+  right: var(--nav-width) !important;
+}
 .ws-panel-left {
   left: 0px;
 }
+.ws-panel-left-menu {
+  left: var(--nav-width) !important;
+}
 .ws-panel {
   position: fixed;
-  opacity: 0.7;
+  background-color: rgba(128, 128, 128, 0.7);
 }
 .ws-panel-x {
-  width: 100%;
+  right: 0;
+  left: 0;
 }
 .ws-panel-y {
-  height: 100%;
+  top: 0;
+  bottom: 0;
 }
 .ws-panel-y > div {
   height: 100%;
@@ -267,6 +425,8 @@ export default {
 .ws-panel-y > div > .cards-container > .scrolling-wrapper {
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 .ws-panel-y > div > .cards-container > .plus-container > .plus-card {
   line-height: 140px !important;
@@ -280,12 +440,15 @@ export default {
 }
 .ws-panel-x > div > .cards-container {
   flex-direction: row !important;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+.ws-panel-x > div > .cards-container > .scrolling-wrapper {
+  overflow-x: scroll;
+  overflow-y: hidden;
 }
 .cards-container {
   display: flex;
-}
-.ws-panel {
-  background-color: gray;
 }
 .card-open {
   height: 160px;
@@ -315,8 +478,6 @@ export default {
 }
 
 .scrolling-wrapper {
-  overflow-x: scroll;
-  overflow-y: hidden;
   white-space: nowrap;
 }
 .scrolling-card {
@@ -340,5 +501,53 @@ export default {
 }
 .dark {
   color: var(--bs-dark);
+}
+.hover-bar {
+  position: absolute;
+  padding: 3px;
+  display: flex;
+}
+.hover-bar > div {
+  background: var(--bs-dark);
+  border-radius: 30px;
+}
+.hover-bar-x {
+  right: 0;
+  left: 0;
+  height: 20px;
+}
+.hover-bar-bottom {
+  bottom: 0;
+}
+.hover-bar-left {
+  left: 0;
+}
+.hover-bar-right {
+  right: 0;
+}
+.hover-bar-x > div {
+  height: 10px;
+  width: 100%;
+  margin-left: 15rem;
+  margin-right: 15rem;
+}
+.hover-bar-y {
+  top: 0;
+  bottom: 0;
+  width: 20px;
+}
+.hover-bar-y > div {
+  width: 10px;
+  margin-top: 15rem;
+  margin-bottom: 15rem;
+}
+.ws-top-bar {
+  display: flex;
+  text-align: start;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+}
+.ws-top-bar > a {
+  z-index: 9;
 }
 </style>
